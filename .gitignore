@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Kivy
+.buildozer/
+bin/
+*.log
+
+# OS
+.DS_Store
+
+# Local data
+*.json.bak
