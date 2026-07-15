@@ -11,15 +11,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          command: buildozer android debug
-          buildozer_version: stable
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip autoconf libtool pkg-config \
+            zlib1g-dev libncurses-dev libffi-dev libssl-dev \
+            automake cmake build-essential
+
+      - name: Install buildozer
+        run: pip install --upgrade buildozer cython
+
+      - name: Build APK with Buildozer
+        run: yes | buildozer android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: habitgraph-debug-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
