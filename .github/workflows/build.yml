@@ -26,9 +26,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git zip unzip autoconf libtool pkg-config \
+            git zip unzip autoconf automake libtool libltdl-dev pkg-config \
             zlib1g-dev libncurses-dev libffi-dev libssl-dev \
-            automake cmake build-essential
+            cmake build-essential
 
       - name: Install buildozer
         run: pip install --upgrade buildozer cython
