@@ -30,6 +30,26 @@ jobs:
             zlib1g-dev libncurses-dev libffi-dev libssl-dev \
             cmake build-essential
 
+      # Android SDK/NDK と python-for-android のビルド成果物はサイズが大きく、
+      # ゼロからのフルビルドは (成功時でも) 15〜25分かかる。
+      # buildozer.spec が変わらない限り中身は同じなので、GitHub Actionsの
+      # キャッシュに保存して2回目以降のビルドを大幅に短縮する。
+      - name: Cache Buildozer global directory (SDK/NDK)
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-global-
+
+      - name: Cache Buildozer project build directory
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: buildozer-project-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-project-
+
       - name: Install buildozer
         run: pip install --upgrade buildozer cython
 
