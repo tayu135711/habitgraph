@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import dataclass, field, asdict
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -70,6 +70,41 @@ class Habit:
             return 0.0
         done = sum(1 for _, ok in days if ok)
         return done / len(days)
+
+    def total_completions(self) -> int:
+        """この習慣が生涯で達成された合計回数"""
+        return sum(1 for v in self.logs.values() if v)
+
+
+# 育成要素(木)の成長段階。(必要な合計達成回数, 表示名) のしきい値テーブル。
+# 数値は「厳しすぎず、かつすぐ最大まで行かない」ことを狙って決めた目安値。
+GROWTH_STAGES = [
+    (0, "seed"),
+    (5, "sprout"),
+    (15, "sapling"),
+    (30, "young_tree"),
+    (60, "full_tree"),
+    (120, "blooming_tree"),
+]
+
+
+def growth_stage_for(total_completions: int) -> tuple[int, str]:
+    """合計達成回数から (段階インデックス, 段階名) を返す"""
+    stage_index = 0
+    stage_name = GROWTH_STAGES[0][1]
+    for i, (threshold, name) in enumerate(GROWTH_STAGES):
+        if total_completions >= threshold:
+            stage_index = i
+            stage_name = name
+    return stage_index, stage_name
+
+
+def next_growth_threshold(total_completions: int) -> Optional[int]:
+    """次の段階まであと何回か。既に最大段階なら None"""
+    for threshold, _ in GROWTH_STAGES:
+        if total_completions < threshold:
+            return threshold - total_completions
+    return None
 
 
 class HabitStore:
@@ -141,3 +176,51 @@ class HabitStore:
             return 0.0
         done = sum(1 for h in habits if h.is_done_on(today_str()))
         return done / len(habits)
+
+    def total_completions(self) -> int:
+        """全習慣を通じた生涯の合計達成回数(育成要素のレベル計算に使う)"""
+        return sum(h.total_completions() for h in self.habits.values())
+
+    def weekly_recap(self, ref_day: Optional[date] = None) -> dict:
+        """直近7日間のサマリーを1つの辞書にまとめて返す(週間リキャップカード用)。
+
+        - total_checks: 直近7日間の達成チェック数の合計
+        - active_days: 1つ以上の習慣を達成した日数
+        - best_streak: 直近7日基準で見た、全習慣中の最長ストリーク
+        - top_habit: 直近7日間で最も達成率が高かった習慣(タイなら登録が早い方)
+        """
+        ref_day = ref_day or date.today()
+        habits = self.list_habits()
+
+        total_checks = 0
+        per_day_any = [False] * 7
+        best_streak = 0
+        top_habit = None
+        top_rate = -1.0
+
+        for habit in habits:
+            days = habit.last_n_days(7, ref_day)
+            for i, (_, done) in enumerate(days):
+                if done:
+                    total_checks += 1
+                    per_day_any[i] = True
+
+            streak = habit.current_streak(ref_day)
+            if streak > best_streak:
+                best_streak = streak
+
+            rate = habit.completion_rate(7, ref_day)
+            if rate > top_rate:
+                top_rate = rate
+                top_habit = habit
+
+        active_days = sum(1 for v in per_day_any if v)
+
+        return {
+            "total_checks": total_checks,
+            "active_days": active_days,
+            "best_streak": best_streak,
+            "top_habit_name": top_habit.name if top_habit else None,
+            "top_habit_rate": top_rate if top_habit else 0.0,
+            "habit_count": len(habits),
+        }

@@ -16,9 +16,14 @@ class HabitCard(BoxLayout):
     streak = NumericProperty(0)
     done_today = BooleanProperty(False)
 
-    # HomeScreen から渡されるコールバック: on_toggle(habit_id)
-    on_toggle = ObjectProperty(None, allownone=True)
+    # HomeScreen から渡されるコールバック
+    on_toggle = ObjectProperty(None, allownone=True)   # on_toggle(habit_id)
+    on_delete = ObjectProperty(None, allownone=True)   # on_delete(habit_id, habit_name)
 
     def toggle(self):
         if self.on_toggle:
             self.on_toggle(self.habit_id)
+
+    def request_delete(self):
+        if self.on_delete:
+            self.on_delete(self.habit_id, self.habit_name)

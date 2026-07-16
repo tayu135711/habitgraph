@@ -2,6 +2,7 @@
 #:import dp kivy.metrics.dp
 #:import get_color_from_hex kivy.utils.get_color_from_hex
 #:import RingProgress widgets.ring_progress.RingProgress
+#:import GrowthTree widgets.growth_tree.GrowthTree
 
 # ---------------------------------------------------------------
 # 共通パーツ
@@ -88,6 +89,8 @@
             valign: "bottom"
             text_size: self.size
             font_size: "16sp"
+            shorten: True
+            shorten_from: "right"
         Label:
             text: (f"streak {root.streak} days") if root.streak else "start today"
             color: 0.6, 0.65, 0.75, 1
@@ -95,6 +98,8 @@
             halign: "left"
             valign: "top"
             text_size: self.size
+            shorten: True
+            shorten_from: "right"
 
     Button:
         size_hint: None, None
@@ -113,6 +118,18 @@
                 pos: self.pos
                 size: self.size
         on_release: root.toggle()
+
+    Button:
+        size_hint: None, None
+        size: dp(28), dp(28)
+        background_normal: ""
+        background_down: ""
+        background_color: 0, 0, 0, 0
+        text: "x"
+        bold: True
+        font_size: "13sp"
+        color: 0.55, 0.58, 0.65, 1
+        on_release: root.request_delete()
 
 # ---------------------------------------------------------------
 # ホーム画面
@@ -151,21 +168,41 @@
                     bold: True
                     color: 1, 1, 1, 1
                     halign: "left"
+                    valign: "middle"
                     text_size: self.size
                     size_hint_y: None
                     height: dp(30)
+                    shorten: True
+                    shorten_from: "right"
                 Label:
                     text: "today's progress: " + str(int(ring.progress * 100)) + "%"
                     color: 0.65, 0.7, 0.8, 1
                     halign: "left"
+                    valign: "top"
                     text_size: self.size
+                    shorten: True
+                    shorten_from: "right"
+
+            Widget:
+                size_hint_x: None
+                width: dp(4)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            spacing: dp(10)
 
             GhostButton:
                 text: "stats"
-                size_hint: None, None
-                size: dp(64), dp(36)
-                pos_hint: {"center_y": 0.5}
                 on_release: root.go_stats()
+
+            GhostButton:
+                text: "garden"
+                on_release: root.go_garden()
+
+            GhostButton:
+                text: "recap"
+                on_release: root.go_recap()
 
         ScrollView:
             do_scroll_x: False
@@ -212,7 +249,10 @@
             size_hint_y: None
             height: dp(32)
             halign: "left"
+            valign: "middle"
             text_size: self.size
+            shorten: True
+            shorten_from: "right"
 
         TextInput:
             id: name_input
@@ -234,7 +274,10 @@
             size_hint_y: None
             height: dp(20)
             halign: "left"
+            valign: "middle"
             text_size: self.size
+            shorten: True
+            shorten_from: "right"
 
         GridLayout:
             id: palette_grid
@@ -316,3 +359,186 @@
                 spacing: dp(12)
                 size_hint_y: None
                 height: self.minimum_height
+
+# ---------------------------------------------------------------
+# ガーデン画面(育成要素)
+# ---------------------------------------------------------------
+<GardenScreen>:
+    tree: tree
+
+    canvas.before:
+        Color:
+            rgba: 0.06, 0.07, 0.09, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(20), dp(24), dp(20), dp(16)
+        spacing: dp(16)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            GhostButton:
+                text: "< back"
+                size_hint: None, None
+                size: dp(80), dp(36)
+                on_release: root.go_home()
+            Label:
+                text: "Garden"
+                font_size: "20sp"
+                bold: True
+                color: 1, 1, 1, 1
+
+        Label:
+            text: root.stage_label
+            font_size: "18sp"
+            bold: True
+            color: 1, 1, 1, 1
+            size_hint_y: None
+            height: dp(28)
+
+        Label:
+            text: f"合計 {root.total_completions} 回の積み重ね"
+            color: 0.65, 0.7, 0.8, 1
+            font_size: "13sp"
+            size_hint_y: None
+            height: dp(20)
+
+        GrowthTree:
+            id: tree
+            size_hint_y: None
+            height: dp(320)
+
+        Label:
+            text: root.next_hint
+            color: 0.6, 0.65, 0.75, 1
+            font_size: "13sp"
+            size_hint_y: None
+            height: dp(24)
+
+        Widget:
+            # spacer
+
+# ---------------------------------------------------------------
+# 週間リキャップ画面
+# ---------------------------------------------------------------
+<RecapScreen>:
+    card: card
+
+    canvas.before:
+        Color:
+            rgba: 0.06, 0.07, 0.09, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(20), dp(24), dp(20), dp(16)
+        spacing: dp(16)
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+            GhostButton:
+                text: "< back"
+                size_hint: None, None
+                size: dp(80), dp(36)
+                on_release: root.go_home()
+            Label:
+                text: "Weekly Recap"
+                font_size: "20sp"
+                bold: True
+                color: 1, 1, 1, 1
+
+        BoxLayout:
+            id: card
+            orientation: "vertical"
+            padding: dp(20)
+            spacing: dp(14)
+            size_hint_y: None
+            height: dp(340)
+            canvas.before:
+                Color:
+                    rgba: 0.31, 0.20, 0.55, 1
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(20)]
+                Color:
+                    rgba: 1, 1, 1, 0.06
+                Ellipse:
+                    pos: (self.right - dp(160), self.top - dp(160))
+                    size: (dp(220), dp(220))
+
+            Label:
+                text: "This Week"
+                font_size: "14sp"
+                color: 1, 1, 1, 0.75
+                size_hint_y: None
+                height: dp(20)
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: f"{root.total_checks} checks"
+                font_size: "34sp"
+                bold: True
+                color: 1, 1, 1, 1
+                size_hint_y: None
+                height: dp(46)
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: f"active {root.active_days} / 7 days"
+                font_size: "15sp"
+                color: 1, 1, 1, 0.85
+                size_hint_y: None
+                height: dp(22)
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: f"best streak: {root.best_streak} days"
+                font_size: "15sp"
+                color: 1, 1, 1, 0.85
+                size_hint_y: None
+                height: dp(22)
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: f"top habit: {root.top_habit_name}"
+                font_size: "15sp"
+                color: 1, 1, 1, 0.85
+                size_hint_y: None
+                height: dp(22)
+                halign: "left"
+                text_size: self.size
+                shorten: True
+                shorten_from: "right"
+
+            Widget:
+                # spacer
+
+        PrimaryButton:
+            text: "画像として保存"
+            size_hint_y: None
+            height: dp(48)
+            on_release: root.save_image()
+
+        Label:
+            text: root.save_status
+            color: 0.6, 0.8, 0.65, 1
+            font_size: "12sp"
+            size_hint_y: None
+            height: dp(20)
+            shorten: True
+            shorten_from: "left"
+
+        Widget:
+            # spacer

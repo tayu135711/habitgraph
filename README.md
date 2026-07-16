@@ -5,9 +5,13 @@
 外部のグラフライブラリは使わず、達成率のリング表示も週間バーチャートも **Kivyのcanvas命令で自前描画** しています。
 
 <p align="center">
-  <img src="assets/screenshots/home.png" width="220" />
-  <img src="assets/screenshots/stats.png" width="220" />
-  <img src="assets/screenshots/add_habit.png" width="220" />
+  <img src="assets/screenshots/home.png" width="200" />
+  <img src="assets/screenshots/stats.png" width="200" />
+  <img src="assets/screenshots/add_habit.png" width="200" />
+</p>
+<p align="center">
+  <img src="assets/screenshots/garden.png" width="200" />
+  <img src="assets/screenshots/recap.png" width="200" />
 </p>
 
 ## ✨ 機能
@@ -17,24 +21,36 @@
 - 連続達成日数(ストリーク)の自動計算
 - 直近7日間の達成状況を習慣ごとにバーチャートで表示
 - 今日全体の達成率をリング状のプログレスで表示
+- 🌱 **ガーデン**: 生涯の合計達成回数に応じて木が育つ、育成型のビジュアル(たね→芽→若木→木→大きな木→満開の木)
+- 📇 **週間リキャップ**: 直近7日間のサマリー(チェック数・活動日数・最長ストリーク・最も続いた習慣)を1枚のカードとして表示し、画像として端末に保存可能(ファイルマネージャーやギャラリーアプリから見つけて共有できます)
+- 🗑️ 習慣の削除(確認ダイアログ付き)
 - データはJSONでローカル保存、サーバー不要・完全オフライン動作
+- 日本語の習慣名を入力・表示可能([Kosugi](https://github.com/googlefonts/kosugi)フォントを同梱、Apache License 2.0)
 
 ## 🗂️ プロジェクト構成
 
 ```
 habitgraph/
-├── main.py                  # エントリーポイント(App/ScreenManager初期化)
+├── main.py                  # エントリーポイント(App/ScreenManager初期化、日本語フォント登録)
 ├── habitgraph.kv             # 全画面の見た目定義(Kv言語)
+├── icon.png                  # アプリアイコン
+├── index.html                 # GitHub Pages用の紹介ランディングページ
 ├── data/
-│   └── storage.py           # Kivy非依存のデータ層(JSON永続化・ストリーク計算)
+│   └── storage.py            # Kivy非依存のデータ層(JSON永続化・ストリーク・週間集計・育成段階の計算)
 ├── widgets/
-│   ├── habit_card.py         # 習慣1件ぶんの行ウィジェット
+│   ├── habit_card.py         # 習慣1件ぶんの行ウィジェット(チェック・削除ボタン)
 │   ├── bar_chart.py          # 週間バーチャート(自前canvas描画)
-│   └── ring_progress.py      # 達成率リング(自前canvas描画)
+│   ├── ring_progress.py      # 達成率リング(自前canvas描画)
+│   └── growth_tree.py        # 育成要素の木(自前canvas描画)
 ├── screens/
 │   ├── home_screen.py        # ホーム画面
 │   ├── add_habit_screen.py   # 習慣追加画面
-│   └── stats_screen.py       # 統計画面
+│   ├── stats_screen.py       # 統計画面
+│   ├── garden_screen.py      # ガーデン画面(育成要素)
+│   └── recap_screen.py       # 週間リキャップ画面
+├── assets/
+│   ├── fonts/                # 日本語対応フォント(Kosugi, Apache License 2.0)
+│   └── screenshots/          # READMEに載せているスクリーンショット
 ├── tests/
 │   └── test_storage.py       # データ層のpytestユニットテスト
 ├── buildozer.spec            # Android/iOSビルド設定
@@ -87,7 +103,9 @@ pytest tests/ -v
 ## 🛠️ 今後の拡張アイデア
 
 - リマインダー通知(`plyer` でOS通知)
-- 月間カレンダービュー
+- 年間コントリビューショングラフ画面
+- マイルストーンバッジ(7日・30日・100日ストリーク)
+- ストリークフリーズ(1回休み券)
 - 習慣の並び替え・アーカイブ
 - ダークモード/ライトモード切り替え
 

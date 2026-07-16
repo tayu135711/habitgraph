@@ -91,3 +91,69 @@ def test_delete_habit(tmp_path):
     h = store.add_habit("Temp", "#EF4444")
     store.delete_habit(h.id)
     assert h.id not in store.habits
+
+
+def test_growth_stage_thresholds():
+    from data.storage import growth_stage_for, next_growth_threshold
+
+    assert growth_stage_for(0) == (0, "seed")
+    assert growth_stage_for(4) == (0, "seed")
+    assert growth_stage_for(5) == (1, "sprout")
+    assert growth_stage_for(29) == (2, "sapling")
+    assert growth_stage_for(30) == (3, "young_tree")
+    assert growth_stage_for(59) == (3, "young_tree")
+    assert growth_stage_for(60) == (4, "full_tree")
+    assert growth_stage_for(120) == (5, "blooming_tree")
+    assert growth_stage_for(9999) == (5, "blooming_tree")
+
+    assert next_growth_threshold(0) == 5
+    assert next_growth_threshold(3) == 2
+    assert next_growth_threshold(120) is None
+
+
+def test_total_completions(tmp_path):
+    store = make_store(tmp_path)
+    h1 = store.add_habit("A", "#4F8EF7")
+    h2 = store.add_habit("B", "#22C55E")
+
+    assert store.total_completions() == 0
+
+    today = date.today()
+    for i in range(3):
+        h1.logs[(today - timedelta(days=i)).strftime("%Y-%m-%d")] = True
+    h2.logs[today.strftime("%Y-%m-%d")] = True
+    store.save()
+
+    assert h1.total_completions() == 3
+    assert store.total_completions() == 4
+
+
+def test_weekly_recap(tmp_path):
+    store = make_store(tmp_path)
+    h1 = store.add_habit("Read", "#4F8EF7")
+    h2 = store.add_habit("Run", "#22C55E")
+
+    today = date.today()
+    # Read: 直近7日間フル達成(ストリーク7、達成率100%)
+    for i in range(7):
+        h1.logs[(today - timedelta(days=i)).strftime("%Y-%m-%d")] = True
+    # Run: 今日だけ達成
+    h2.logs[today.strftime("%Y-%m-%d")] = True
+    store.save()
+
+    recap = store.weekly_recap(today)
+    assert recap["total_checks"] == 8  # 7 (Read) + 1 (Run)
+    assert recap["active_days"] == 7  # 全日どちらかは達成している
+    assert recap["best_streak"] == 7
+    assert recap["top_habit_name"] == "Read"
+    assert recap["habit_count"] == 2
+
+
+def test_weekly_recap_empty(tmp_path):
+    store = make_store(tmp_path)
+    recap = store.weekly_recap()
+    assert recap["total_checks"] == 0
+    assert recap["active_days"] == 0
+    assert recap["best_streak"] == 0
+    assert recap["top_habit_name"] is None
+    assert recap["habit_count"] == 0

@@ -4,7 +4,7 @@ package.name = habitgraph
 package.domain = org.example
 
 source.dir = .
-source.include_exts = py,png,jpg,kv,atlas,json
+source.include_exts = py,png,jpg,kv,atlas,json,ttf
 
 version = 0.1.0
 requirements = python3,kivy==2.3.1
